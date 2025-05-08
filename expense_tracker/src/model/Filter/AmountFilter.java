@@ -1,37 +1,29 @@
-package model.Filter;
-
-import java.util.ArrayList;
-import java.util.List;
+package controller;
 
 import model.Transaction;
-import controller.InputValidation;
+import java.util.List;
+import java.util.ArrayList;
 
-public class AmountFilter implements TransactionFilter{
-    private double amountFilter;
+public class AmountFilter implements TransactionFilter {
+    private final double targetAmount;
 
-    public AmountFilter(double amountFilter){
-        // Since the AmountFilter constructor is public, 
-        // the input validation needs to be performed again.
-        if(!InputValidation.isValidAmount(amountFilter)){
-            throw new IllegalArgumentException("Invalid amount filter");
-        } else {
-            this.amountFilter = amountFilter;
-        }
+    public AmountFilter(double targetAmount) {
+        this.targetAmount = targetAmount;
     }
+
     @Override
-    public List<Transaction> filter(List<Transaction> transactions){
-	// Perform input validation
-	if (transactions == null) {
-	    throw new IllegalArgumentException("The transactions list must be non-null.");
-	}
-        List<Transaction> filteredTransactions = new ArrayList<>();
-        for(Transaction transaction : transactions){
-            // Your solution could use a different comparison here.
-            if(transaction.getAmount() == amountFilter){
-                filteredTransactions.add(transaction);
+    public boolean inputValidation() {
+        return targetAmount > 0 && targetAmount < 1000;
+    }
+
+    @Override
+    public List<Transaction> filter(List<Transaction> transactions) {
+        List<Transaction> filtered = new ArrayList<>();
+        for (Transaction t : transactions) {
+            if (t.getAmount() == targetAmount) {
+                filtered.add(t);
             }
         }
-        return filteredTransactions;
+        return filtered;
     }
-    
 }

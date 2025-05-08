@@ -1,16 +1,9 @@
-package model.Filter;
-
-import java.util.List;
+package controller;
 
 import model.Transaction;
+import java.util.List;
 
-/**
- * The TransactionFilter supports filtering the transaction list.
- *
- * NOTE) The Strategy design pattern is being applied. This is the Strategy interface.
- */
 public interface TransactionFilter {
-
-  public List<Transaction> filter(List<Transaction> transactions);
-
+    List<Transaction> filter(List<Transaction> transactions);
+    boolean inputValidation();
 }

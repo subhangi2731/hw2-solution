@@ -1,38 +1,29 @@
-package model.Filter;
-
-import java.util.ArrayList;
-import java.util.List;
+package controller;
 
 import model.Transaction;
-import controller.InputValidation;
+import java.util.List;
+import java.util.ArrayList;
 
 public class CategoryFilter implements TransactionFilter {
-    private String categoryFilter;
+    private final String targetCategory;
 
-    public CategoryFilter(String categoryFilter) {
-        // Since the CategoryFilter constructor is public, 
-        // the input validation needs to be performed again.
-        if(!InputValidation.isValidCategory(categoryFilter)){
-            throw new IllegalArgumentException("Invalid category filter");
-        }else{
-            this.categoryFilter = categoryFilter;
-        }
+    public CategoryFilter(String targetCategory) {
+        this.targetCategory = targetCategory;
+    }
+
+    @Override
+    public boolean inputValidation() {
+        return targetCategory != null && !targetCategory.trim().isEmpty() && targetCategory.matches("[a-zA-Z]+");
     }
 
     @Override
     public List<Transaction> filter(List<Transaction> transactions) {
-	// Perform input validation
-        if (transactions == null) {
-            throw new IllegalArgumentException("The transactions list must be non-null.");
-	}
-	
-        List<Transaction> filteredTransactions = new ArrayList<>();
-        for (Transaction transaction : transactions) {
-            if (transaction.getCategory().equalsIgnoreCase(categoryFilter)) {
-                filteredTransactions.add(transaction);
+        List<Transaction> filtered = new ArrayList<>();
+        for (Transaction t : transactions) {
+            if (t.getCategory().equalsIgnoreCase(targetCategory)) {
+                filtered.add(t);
             }
         }
-
-        return filteredTransactions;
+        return filtered;
     }
 }

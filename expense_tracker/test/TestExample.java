@@ -1,10 +1,5 @@
-
 // package test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.util.Date;
 import java.util.List;
@@ -14,12 +9,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import controller.ExpenseTrackerController;
+import controller.AmountFilter;
+import controller.CategoryFilter;
 import model.ExpenseTrackerModel;
 import model.Transaction;
-import model.Filter.AmountFilter;
-import model.Filter.CategoryFilter;
 import view.ExpenseTrackerView;
-
 
 public class TestExample {
 
