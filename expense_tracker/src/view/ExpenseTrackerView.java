@@ -51,7 +51,9 @@ public class ExpenseTrackerView extends JFrame {
 
         addTransactionBtn = new JButton("Add Transaction");
         removeTransactionBtn = new JButton("Remove Selected Transaction");
+        removeTransactionBtn.setToolTipText("Select a row and click to remove the transaction");
         undoBtn = new JButton("Undo Last Remove");
+        undoBtn.setToolTipText("Undo the last removed transaction");
         undoBtn.setEnabled(false);  // Disabled by default
 
         // --- Filter Section ---
