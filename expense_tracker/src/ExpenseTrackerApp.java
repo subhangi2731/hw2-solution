@@ -1,4 +1,5 @@
-import javax.swing.JOptionPane;
+
+import javax.swing.*;
 import controller.ExpenseTrackerController;
 import model.ExpenseTrackerModel;
 import view.ExpenseTrackerView;
@@ -9,112 +10,80 @@ public class ExpenseTrackerApp {
 
     public static void main(String[] args) {
 
-        // Initialize MVC components
         ExpenseTrackerModel model = new ExpenseTrackerModel();
         ExpenseTrackerView view = new ExpenseTrackerView();
         ExpenseTrackerController controller = new ExpenseTrackerController(model, view);
 
-        // Display the main UI
         view.setVisible(true);
 
-        // --- ADD TRANSACTION ---
         view.getAddTransactionBtn().addActionListener(e -> {
             double amount = view.getAmountField();
             String category = view.getCategoryField();
 
             boolean added = controller.addTransaction(amount, category);
             if (!added) {
-                JOptionPane.showMessageDialog(view,
-                        "Invalid input. Please enter a non-zero amount < 1000 and a valid alphabetical category.",
-                        "Input Error",
-                        JOptionPane.ERROR_MESSAGE);
+                showDialog(view, "Invalid input. Please enter a valid amount and category.", "Input Error", JOptionPane.ERROR_MESSAGE);
                 view.toFront();
             }
         });
 
-        // --- REMOVE TRANSACTION ---
         view.getRemoveTransactionBtn().addActionListener(e -> {
             int selectedRow = view.getSelectedRowIndex();
-
             if (selectedRow == -1) {
-                JOptionPane.showMessageDialog(view,
-                        "Please select a transaction row to remove.",
-                        "No Selection",
-                        JOptionPane.WARNING_MESSAGE);
+                showDialog(view, "Please select a transaction to remove.", "No Selection", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             boolean removed = controller.removeTransaction(selectedRow);
             if (!removed) {
-                JOptionPane.showMessageDialog(view,
-                        "Could not remove the selected transaction. Please try again.",
-                        "Remove Failed",
-                        JOptionPane.ERROR_MESSAGE);
+                showDialog(view, "Could not remove the selected transaction.", "Remove Failed", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // --- UNDO LAST REMOVAL ---
         view.getUndoBtn().addActionListener(e -> {
             boolean undone = controller.undoRemove();
             if (!undone) {
-                JOptionPane.showMessageDialog(view,
-                        "No recent removal to undo.",
-                        "Undo Not Available",
-                        JOptionPane.INFORMATION_MESSAGE);
+                showDialog(view, "No transaction available to undo.", "Undo Not Available", JOptionPane.INFORMATION_MESSAGE);
             }
         });
 
-        // --- APPLY CATEGORY FILTER ---
         view.addApplyCategoryFilterListener(e -> {
             try {
-                String input = view.getCategoryFilterInput();
-                CategoryFilter categoryFilter = new CategoryFilter(input);
-                controller.setFilter(categoryFilter);
+                String category = view.getCategoryFilterInput();
+                CategoryFilter filter = new CategoryFilter(category);
+                controller.setFilter(filter);
                 controller.applyFilter();
             } catch (IllegalArgumentException ex) {
-                JOptionPane.showMessageDialog(view,
-                        ex.getMessage(),
-                        "Filter Error",
-                        JOptionPane.WARNING_MESSAGE);
+                showDialog(view, ex.getMessage(), "Category Filter Error", JOptionPane.WARNING_MESSAGE);
                 view.toFront();
             }
         });
 
-        // --- APPLY AMOUNT FILTER ---
         view.addApplyAmountFilterListener(e -> {
             try {
-                double input = view.getAmountFilterInput();
-                AmountFilter amountFilter = new AmountFilter(input);
-                controller.setFilter(amountFilter);
+                double amount = view.getAmountFilterInput();
+                AmountFilter filter = new AmountFilter(amount);
+                controller.setFilter(filter);
                 controller.applyFilter();
             } catch (IllegalArgumentException ex) {
-                JOptionPane.showMessageDialog(view,
-                        ex.getMessage(),
-                        "Filter Error",
-                        JOptionPane.WARNING_MESSAGE);
+                showDialog(view, ex.getMessage(), "Amount Filter Error", JOptionPane.WARNING_MESSAGE);
                 view.toFront();
             }
         });
 
-        // --- CLEAR / RESET FILTER ---
         view.addClearFilterListener(e -> {
-            // Step 1: Clear filters from the controller
-            controller.setFilter(null);
-
-            // Step 2: Refresh full transaction list
-            controller.refresh();
-
-            // Step 3: Reset highlight rows if any (optional)
-            view.highlightRows(null); // Safe reset if highlight method is implemented
-
-            // Step 4: Clear filter input fields from the view
-            view.clearFilterInputs(); // Ensure this method exists in the view
-
-            // Step 5: Show confirmation
-            JOptionPane.showMessageDialog(view,
-                    "All filters have been cleared. Displaying all transactions.",
-                    "Filters Reset",
-                    JOptionPane.INFORMATION_MESSAGE);
+            controller.clearFilter();
+            showDialog(view, "All filters have been cleared.", "Filters Reset", JOptionPane.INFORMATION_MESSAGE);
         });
+    }
+
+    private static void showDialog(JFrame parent, String message, String title, int type) {
+        JDialog dialog = new JDialog(parent, title, true);
+        JOptionPane optionPane = new JOptionPane(message, type);
+        dialog.setContentPane(optionPane);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.pack();
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
     }
 }
