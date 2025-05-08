@@ -4,12 +4,14 @@ import model.ExpenseTrackerModel;
 import model.Transaction;
 import view.ExpenseTrackerView;
 
+import java.util.Collections;
 import java.util.List;
 
 public class ExpenseTrackerController {
 
     private final ExpenseTrackerModel model;
     private final ExpenseTrackerView view;
+    private TransactionFilter activeFilter; // holds the current filter (amount/category)
 
     public ExpenseTrackerController(ExpenseTrackerModel model, ExpenseTrackerView view) {
         this.model = model;
@@ -18,11 +20,6 @@ public class ExpenseTrackerController {
 
     /**
      * Adds a transaction to the model and updates the view.
-     * Performs input validation before addition.
-     *
-     * @param amount   The amount for the transaction.
-     * @param category The category for the transaction.
-     * @return true if the transaction is added successfully, false otherwise.
      */
     public boolean addTransaction(double amount, String category) {
         if (!InputValidation.isValidAmount(amount)) {
@@ -35,8 +32,8 @@ public class ExpenseTrackerController {
             return false;
         }
 
-        Transaction newTransaction = new Transaction(amount, category);
-        model.addTransaction(newTransaction);
+        Transaction transaction = new Transaction(amount, category);
+        model.addTransaction(transaction);
         refresh();
 
         System.out.println("[AddTransaction] Added: " + amount + " | " + category);
@@ -44,55 +41,94 @@ public class ExpenseTrackerController {
     }
 
     /**
-     * Removes a transaction by index from the view's table.
-     * The removed transaction is passed to the model for deletion.
-     * Also updates the Undo state in the view if supported.
-     *
-     * @param index Index of the selected row in the JTable.
-     * @return true if successfully removed, false otherwise.
+     * Removes a transaction based on selected table index.
      */
     public boolean removeTransaction(int index) {
-        List<Transaction> currentTransactions = model.getTransactions();
+        List<Transaction> transactions = model.getTransactions();
 
-        if (index < 0 || index >= currentTransactions.size()) {
-            System.err.println("[RemoveTransaction] Invalid row index: " + index);
+        if (index < 0 || index >= transactions.size()) {
+            System.err.println("[RemoveTransaction] Invalid index: " + index);
             return false;
         }
 
-        Transaction transactionToRemove = currentTransactions.get(index);
+        Transaction toRemove = transactions.get(index);
 
         try {
-            model.removeTransaction(transactionToRemove);
+            model.removeTransaction(toRemove);
             refresh();
-            System.out.println("[RemoveTransaction] Removed: " +
-                    transactionToRemove.getAmount() + ", " +
-                    transactionToRemove.getCategory() + ", " +
-                    transactionToRemove.getTimestamp());
 
-            // If undo supported:
             if (view.getUndoBtn() != null) {
                 view.getUndoBtn().setEnabled(model.canUndo());
             }
 
+            System.out.println("[RemoveTransaction] Removed: " +
+                    toRemove.getAmount() + " | " +
+                    toRemove.getCategory() + " | " +
+                    toRemove.getTimestamp());
+
             return true;
         } catch (Exception e) {
-            System.err.println("[RemoveTransaction] Exception: " + e.getMessage());
+            System.err.println("[RemoveTransaction] Error: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
 
     /**
-     * Refreshes the table in the view with the current list of transactions.
+     * Applies a filter using the currently set strategy.
      */
-    public void refresh() {
-        view.refreshTable(model.getTransactions());
+    public boolean applyFilter() {
+        if (activeFilter == null) {
+            // No filter -> show full list
+            refresh();
+            return true;
+        }
+
+        List<Transaction> transactions = model.getTransactions();
+
+        if (!activeFilter.inputValidation()) {
+            System.err.println("[Filter] Invalid filter input.");
+            return false;
+        }
+
+        List<Transaction> filtered = activeFilter.filter(transactions);
+        view.displayFilteredTransactions(filtered);
+
+        // Optional: highlight filtered rows if supported
+        List<Integer> indexes = findFilteredRowIndexes(filtered, transactions);
+        view.highlightRows(indexes);
+
+        return true;
     }
 
     /**
-     * Undoes the last removed transaction (if supported).
-     *
-     * @return true if undo was successful, false otherwise.
+     * Updates the currently active filter.
+     */
+    public void setFilter(TransactionFilter filter) {
+        this.activeFilter = filter;
+    }
+
+    /**
+     * Clears all filters and resets the UI view to display all transactions.
+     */
+    public void clearFilter() {
+        this.activeFilter = null;
+        view.clearFilterInputs();        // Reset input fields in the view
+        view.highlightRows(null);        // Remove highlights if any
+        refresh();                       // Refresh full table
+        System.out.println("[Filter] All filters cleared.");
+    }
+
+    /**
+     * Refreshes the table with the current unfiltered list.
+     */
+    public void refresh() {
+        List<Transaction> transactions = model.getTransactions();
+        view.refreshTable(transactions);
+    }
+
+    /**
+     * Reverts the last removal.
      */
     public boolean undoRemove() {
         if (!model.canUndo()) {
@@ -103,12 +139,23 @@ public class ExpenseTrackerController {
         model.undoLastRemove();
         refresh();
 
-        // Disable undo button if there's nothing left to undo
         if (view.getUndoBtn() != null) {
             view.getUndoBtn().setEnabled(model.canUndo());
         }
 
         System.out.println("[Undo] Last removed transaction restored.");
         return true;
+    }
+
+    /**
+     * Helper to map filtered transactions to their row indexes in the table.
+     */
+    private List<Integer> findFilteredRowIndexes(List<Transaction> filtered, List<Transaction> fullList) {
+        List<Integer> indexes = new java.util.ArrayList<>();
+        for (Transaction t : filtered) {
+            int index = fullList.indexOf(t);
+            if (index != -1) indexes.add(index);
+        }
+        return indexes;
     }
 }

@@ -96,10 +96,25 @@ public class ExpenseTrackerApp {
             }
         });
 
-        // --- CLEAR FILTER ---
+        // --- CLEAR / RESET FILTER ---
         view.addClearFilterListener(e -> {
+            // Step 1: Clear filters from the controller
             controller.setFilter(null);
-            controller.applyFilter();
+
+            // Step 2: Refresh full transaction list
+            controller.refresh();
+
+            // Step 3: Reset highlight rows if any (optional)
+            view.highlightRows(null); // Safe reset if highlight method is implemented
+
+            // Step 4: Clear filter input fields from the view
+            view.clearFilterInputs(); // Ensure this method exists in the view
+
+            // Step 5: Show confirmation
+            JOptionPane.showMessageDialog(view,
+                    "All filters have been cleared. Displaying all transactions.",
+                    "Filters Reset",
+                    JOptionPane.INFORMATION_MESSAGE);
         });
     }
 }

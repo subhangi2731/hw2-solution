@@ -1,6 +1,7 @@
 package view;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -51,7 +52,7 @@ public class ExpenseTrackerView extends JFrame {
         addTransactionBtn = new JButton("Add Transaction");
         removeTransactionBtn = new JButton("Remove Selected Transaction");
         undoBtn = new JButton("Undo Last Remove");
-        undoBtn.setEnabled(false);  // disabled by default
+        undoBtn.setEnabled(false);  // Disabled by default
 
         // --- Filter Section ---
         amountFilterField = new JTextField(7);
@@ -62,7 +63,7 @@ public class ExpenseTrackerView extends JFrame {
 
         clearFilterBtn = new JButton("Clear Filter");
 
-        // --- Top Panel (Input) ---
+        // --- Top Panel (Inputs + Main Actions) ---
         JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         inputPanel.add(amountLabel);
         inputPanel.add(amountField);
@@ -72,7 +73,7 @@ public class ExpenseTrackerView extends JFrame {
         inputPanel.add(removeTransactionBtn);
         inputPanel.add(undoBtn);
 
-        // --- Bottom Panel (Filters) ---
+        // --- Bottom Panel (Filter Controls) ---
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filterPanel.add(new JLabel("Amount:"));
         filterPanel.add(amountFilterField);
@@ -82,17 +83,17 @@ public class ExpenseTrackerView extends JFrame {
         filterPanel.add(categoryFilterBtn);
         filterPanel.add(clearFilterBtn);
 
-        // Add components to layout
+        // Add to layout
         add(inputPanel, BorderLayout.NORTH);
         add(new JScrollPane(transactionsTable), BorderLayout.CENTER);
         add(filterPanel, BorderLayout.SOUTH);
 
-        // Final setup
+        // Final UI setup
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
-    // --- Getters and Accessors ---
+    // --- Accessors and Listeners ---
 
     public JButton getAddTransactionBtn() {
         return addTransactionBtn;
@@ -104,6 +105,10 @@ public class ExpenseTrackerView extends JFrame {
 
     public JButton getUndoBtn() {
         return undoBtn;
+    }
+
+    public JButton getClearFilterButton() {
+        return clearFilterBtn;
     }
 
     public JTable getTransactionsTable() {
@@ -133,8 +138,6 @@ public class ExpenseTrackerView extends JFrame {
     public List<Transaction> getDisplayedTransactions() {
         return displayedTransactions;
     }
-
-    // --- Filters ---
 
     public String getCategoryFilterInput() {
         return categoryFilterField.getText().trim();
@@ -181,5 +184,34 @@ public class ExpenseTrackerView extends JFrame {
     public void displayFilteredTransactions(List<Transaction> filteredTransactions) {
         refreshTable(filteredTransactions);
     }
+
+    /**
+     * Clears the values entered in the filter input fields.
+     */
+    public void clearFilterInputs() {
+        categoryFilterField.setText("");
+        amountFilterField.setText("");
+    }
+
+    /**
+     * Resets any row highlights in the transaction table.
+     * @param rowIndexes A list of row indexes to highlight, or null to remove highlights.
+     */
+    public void highlightRows(List<Integer> rowIndexes) {
+        transactionsTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                           boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (rowIndexes != null && rowIndexes.contains(row)) {
+                    c.setBackground(new Color(173, 255, 168)); // Light green
+                } else {
+                    c.setBackground(table.getBackground());
+                }
+                return c;
+            }
+        });
+
+        transactionsTable.repaint();
+    }
 }
-        
